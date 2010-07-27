@@ -1,0 +1,203 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>adsorb.adsorb &mdash; Adsorption v0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Adsorption v0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Adsorption v0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for adsorb.adsorb</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">exc_info</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+
+<div class="viewcode-block" id="Event"><a class="viewcode-back" href="../../index.html#adsorb.adsorb.Event">[docs]</a><span class="k">class</span> <span class="nc">Event</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Collects responses to the event. Attributes:</span>
+
+<span class="sd">    * :attr:`name`: Name of the event</span>
+<span class="sd">    * :attr:`context`: Context for event, provided by caller</span>
+<span class="sd">    * :attr:`data`: Additional data provided by caller</span>
+<span class="sd">    * :attr:`results`: Dictionary of results from each listener</span>
+<span class="sd">    * :attr:`exceptions`: Dictionary of ``(exception, value)`` from failed listeners</span>
+
+<span class="sd">    Event objects are automatically created by :meth:`Adsorb.raiseEvent` and passed</span>
+<span class="sd">    as the sole parameter to each listener.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorber</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adsorber</span> <span class="o">=</span> <span class="n">adsorber</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">kw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exceptions</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">u&quot;&lt;Event &#39;</span><span class="si">%s</span><span class="s">&#39;&gt; on </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Event.call"><a class="viewcode-back" href="../../index.html#adsorb.adsorb.Event.call">[docs]</a>    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call all listeners for this event and collect their output.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">events</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorber</span><span class="o">.</span><span class="n">_getEvents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">listenerid</span> <span class="ow">in</span> <span class="n">events</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">listenerid</span><span class="p">]</span> <span class="o">=</span> <span class="n">events</span><span class="p">[</span><span class="n">listenerid</span><span class="p">](</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">exceptions</span><span class="p">[</span><span class="n">listenerid</span><span class="p">]</span> <span class="o">=</span> <span class="n">exc_info</span><span class="p">()[:</span><span class="mf">2</span><span class="p">]</span> <span class="c"># Save exception and value</span>
+
+</div></div>
+<div class="viewcode-block" id="Adsorber"><a class="viewcode-back" href="../../index.html#adsorb.adsorb.Adsorber">[docs]</a><span class="k">class</span> <span class="nc">Adsorber</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Container for events and listeners. Typically used as a singleton instance</span>
+<span class="sd">    for the entire application.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__events</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_getEvents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return all events for given event name.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__events</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Adsorber.addListener"><a class="viewcode-back" href="../../index.html#adsorb.adsorb.Adsorber.addListener">[docs]</a>    <span class="k">def</span> <span class="nf">addListener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventname</span><span class="p">,</span> <span class="n">listenerid</span><span class="p">,</span> <span class="n">listener</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a listener to the named event. Listeners are passed an instance of</span>
+<span class="sd">        :class:`Event` as the sole parameter. The return value from the listener</span>
+<span class="sd">        is collected in the event object&#39;s :attr:`results` attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__events</span><span class="p">[</span><span class="n">eventname</span><span class="p">][</span><span class="n">listenerid</span><span class="p">]</span> <span class="o">=</span> <span class="n">listener</span>
+</div>
+<div class="viewcode-block" id="Adsorber.removeListener"><a class="viewcode-back" href="../../index.html#adsorb.adsorb.Adsorber.removeListener">[docs]</a>    <span class="k">def</span> <span class="nf">removeListener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventname</span><span class="p">,</span> <span class="n">listenerid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove a listener on an event.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">__events</span><span class="p">[</span><span class="n">eventname</span><span class="p">][</span><span class="n">listenerid</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Adsorber.removeEvent"><a class="viewcode-back" href="../../index.html#adsorb.adsorb.Adsorber.removeEvent">[docs]</a>    <span class="k">def</span> <span class="nf">removeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventname</span><span class="p">,</span> <span class="n">confirm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove all listeners on an event.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">confirm</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">__events</span><span class="p">[</span><span class="n">eventname</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Adsorber.raiseEvent"><a class="viewcode-back" href="../../index.html#adsorb.adsorb.Adsorber.raiseEvent">[docs]</a>    <span class="k">def</span> <span class="nf">raiseEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventname</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Raise an event. All listeners are called and their return values or</span>
+<span class="sd">        exceptions are collected before execution resumes with the caller.</span>
+<span class="sd">        Caller must provide a mandatory ``context`` and optional named attributes</span>
+<span class="sd">        as data for the event.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventname</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="n">e</span><span class="o">.</span><span class="n">call</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">e</span>
+</div>
+<div class="viewcode-block" id="Adsorber.listener"><a class="viewcode-back" href="../../index.html#adsorb.adsorb.Adsorber.listener">[docs]</a>    <span class="k">def</span> <span class="nf">listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Decorator for event listeners to automate the call to :meth:`addListener`.</span>
+<span class="sd">        Usage::</span>
+
+<span class="sd">            @adsorb_instance.listener(&quot;event-name&quot;)</span>
+<span class="sd">            def your_listener(event):</span>
+<span class="sd">                ...</span>
+<span class="sd">                </span>
+<span class="sd">            @adsorb_instance.listener((&quot;event1&quot;, event2&quot;)):</span>
+<span class="sd">            def your_listener(event):</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        A listenerid for the listener is automatically constructed from the</span>
+<span class="sd">        module and function names. This decorator can only be used with module</span>
+<span class="sd">        top-level functions. For class methods and nested functions, call</span>
+<span class="sd">        :meth:`addListener` at run-time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+            <span class="n">listenerid</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eventname</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+                <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">eventname</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">addListener</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">listenerid</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">addListener</span><span class="p">(</span><span class="n">eventname</span><span class="p">,</span> <span class="n">listenerid</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">f</span>
+        <span class="k">return</span> <span class="n">decorator</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Adsorption v0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Kiran Jonnalagadda.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0b2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,261 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to Adsorption’s documentation! &mdash; Adsorption v0.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Adsorption v0.1 documentation" href="#" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">Adsorption v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="welcome-to-adsorption-s-documentation">
+<h1><a class="toc-backref" href="#id1">Welcome to Adsorption&#8217;s documentation!</a><a class="headerlink" href="#welcome-to-adsorption-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference external" href="#welcome-to-adsorption-s-documentation" id="id1">Welcome to Adsorption&#8217;s documentation!</a><ul>
+<li><a class="reference external" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference external" href="#usage" id="id3">Usage</a></li>
+<li><a class="reference external" href="#api-documentation" id="id4">API Documentation</a><ul>
+<li><a class="reference external" href="#module-adsorb.adsorb" id="id5">Package <tt class="xref py py-mod docutils literal"><span class="pre">adsorb</span></tt></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference external" href="#indices-and-tables" id="id6">Indices and tables</a></li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Adsorption is a lightweight loose coupling library for Python. It has no
+dependencies and can be used with any sort of framework for loose
+coupling of components within an application. It was written with web
+applications in mind, but makes no assumptions about where or how it
+will be used.</p>
+</div>
+<div class="section" id="usage">
+<h2><a class="toc-backref" href="#id3">Usage</a><a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>Start with declaring a container for your events. This should ideally
+be a singleton for your entire application, so declare it somewhere
+that it can be imported from across your app:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">adsorb</span> <span class="kn">import</span> <span class="n">Adsorber</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">events</span> <span class="o">=</span> <span class="n">Adsorber</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Declare a listener for an event. Events in Adsorption do not need to be
+declared. They exist as long as they have at least one caller or listener:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nd">@events</span><span class="o">.</span><span class="n">listener</span><span class="p">(</span><span class="s">&#39;event1&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">listener</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="s">&#39;Listener received context&#39;</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">context</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="s">&quot;processed&quot;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@events</span><span class="o">.</span><span class="n">listener</span><span class="p">(</span><span class="s">&#39;event1&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">listener2</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="s">&quot;also-processed&quot;</span>
+</pre></div>
+</div>
+<p>Raise an event from anywhere. Event listeners are called and all responses are
+collected before execution resumes with the caller. The order in which
+listeners are called is not defined. Listeners are not expected to be
+order-aware:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">raiseEvent</span><span class="p">(</span><span class="s">&#39;event1&#39;</span><span class="p">,</span> <span class="s">&#39;some-context&#39;</span><span class="p">)</span>
+<span class="go">Listener received context &#39;some-context&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sorted</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+<span class="go">[(&#39;__main__.listener&#39;, &#39;processed&#39;), (&#39;__main__.listener2&#39;, &#39;also-processed&#39;)]</span>
+</pre></div>
+</div>
+<p>If a listener raised an exception, the exception is captured in <tt class="xref py py-attr docutils literal"><span class="pre">Event.exceptions</span></tt>.
+Future versions may
+add support to call listeners in parallel threads.</p>
+</div>
+<div class="section" id="api-documentation">
+<h2><a class="toc-backref" href="#id4">API Documentation</a><a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-adsorb.adsorb">
+<span id="package-adsorb"></span><h3><a class="toc-backref" href="#id5">Package <tt class="xref py py-mod docutils literal"><span class="pre">adsorb</span></tt></a><a class="headerlink" href="#module-adsorb.adsorb" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="adsorb.adsorb.Adsorber">
+<em class="property">class </em><tt class="descclassname">adsorb.adsorb.</tt><tt class="descname">Adsorber</tt><a class="reference internal" href="_modules/adsorb/adsorb.html#Adsorber"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#adsorb.adsorb.Adsorber" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container for events and listeners. Typically used as a singleton instance
+for the entire application.</p>
+<dl class="method">
+<dt id="adsorb.adsorb.Adsorber.addListener">
+<tt class="descname">addListener</tt><big>(</big><em>eventname</em>, <em>listenerid</em>, <em>listener</em><big>)</big><a class="reference internal" href="_modules/adsorb/adsorb.html#Adsorber.addListener"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#adsorb.adsorb.Adsorber.addListener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a listener to the named event. Listeners are passed an instance of
+<a class="reference internal" href="#adsorb.adsorb.Event" title="adsorb.adsorb.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a> as the sole parameter. The return value from the listener
+is collected in the event object&#8217;s <tt class="xref py py-attr docutils literal"><span class="pre">results</span></tt> attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="adsorb.adsorb.Adsorber.listener">
+<tt class="descname">listener</tt><big>(</big><em>eventname</em><big>)</big><a class="reference internal" href="_modules/adsorb/adsorb.html#Adsorber.listener"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#adsorb.adsorb.Adsorber.listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator for event listeners to automate the call to <a class="reference internal" href="#adsorb.adsorb.Adsorber.addListener" title="adsorb.adsorb.Adsorber.addListener"><tt class="xref py py-meth docutils literal"><span class="pre">addListener()</span></tt></a>.
+Usage:</p>
+<div class="highlight-python"><pre>@adsorb_instance.listener("event-name")
+def your_listener(event):
+    ...
+    
+@adsorb_instance.listener(("event1", event2")):
+def your_listener(event):
+    ...</pre>
+</div>
+<p>A listenerid for the listener is automatically constructed from the
+module and function names. This decorator can only be used with module
+top-level functions. For class methods and nested functions, call
+<a class="reference internal" href="#adsorb.adsorb.Adsorber.addListener" title="adsorb.adsorb.Adsorber.addListener"><tt class="xref py py-meth docutils literal"><span class="pre">addListener()</span></tt></a> at run-time.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="adsorb.adsorb.Adsorber.raiseEvent">
+<tt class="descname">raiseEvent</tt><big>(</big><em>eventname</em>, <em>context</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/adsorb/adsorb.html#Adsorber.raiseEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#adsorb.adsorb.Adsorber.raiseEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raise an event. All listeners are called and their return values or
+exceptions are collected before execution resumes with the caller.
+Caller must provide a mandatory <tt class="docutils literal"><span class="pre">context</span></tt> and optional named attributes
+as data for the event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="adsorb.adsorb.Adsorber.removeEvent">
+<tt class="descname">removeEvent</tt><big>(</big><em>eventname</em>, <em>confirm=False</em><big>)</big><a class="reference internal" href="_modules/adsorb/adsorb.html#Adsorber.removeEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#adsorb.adsorb.Adsorber.removeEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove all listeners on an event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="adsorb.adsorb.Adsorber.removeListener">
+<tt class="descname">removeListener</tt><big>(</big><em>eventname</em>, <em>listenerid</em><big>)</big><a class="reference internal" href="_modules/adsorb/adsorb.html#Adsorber.removeListener"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#adsorb.adsorb.Adsorber.removeListener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a listener on an event.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="adsorb.adsorb.Event">
+<em class="property">class </em><tt class="descclassname">adsorb.adsorb.</tt><tt class="descname">Event</tt><big>(</big><em>adsorber</em>, <em>name</em>, <em>context</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/adsorb/adsorb.html#Event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#adsorb.adsorb.Event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collects responses to the event. Attributes:</p>
+<ul class="simple">
+<li><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt>: Name of the event</li>
+<li><tt class="xref py py-attr docutils literal"><span class="pre">context</span></tt>: Context for event, provided by caller</li>
+<li><tt class="xref py py-attr docutils literal"><span class="pre">data</span></tt>: Additional data provided by caller</li>
+<li><tt class="xref py py-attr docutils literal"><span class="pre">results</span></tt>: Dictionary of results from each listener</li>
+<li><tt class="xref py py-attr docutils literal"><span class="pre">exceptions</span></tt>: Dictionary of <tt class="docutils literal"><span class="pre">(exception,</span> <span class="pre">value)</span></tt> from failed listeners</li>
+</ul>
+<p>Event objects are automatically created by <a class="reference internal" href="#adsorb.adsorb.Adsorber.raiseEvent" title="adsorb.adsorb.Adsorber.raiseEvent"><tt class="xref py py-meth docutils literal"><span class="pre">Adsorber.raiseEvent()</span></tt></a> and passed
+as the sole parameter to each listener.</p>
+<dl class="method">
+<dt id="adsorb.adsorb.Event.call">
+<tt class="descname">call</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/adsorb/adsorb.html#Event.call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#adsorb.adsorb.Event.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call all listeners for this event and collect their output.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1><a class="toc-backref" href="#id6">Indices and tables</a><a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to Adsorption&#8217;s documentation!</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#api-documentation">API Documentation</a><ul>
+<li><a class="reference internal" href="#module-adsorb.adsorb">Package <tt class="docutils literal"><span class="pre">adsorb</span></tt></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">Adsorption v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Kiran Jonnalagadda.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0b2.
+    </div>
+  </body>
+</html>
