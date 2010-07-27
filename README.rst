@@ -22,4 +22,4 @@ To run the tests, install ``nose`` and ``coverage`` and run
 Usage
 -----
 
-See ``docs/``
+See http://jace.github.com/adsorb/
